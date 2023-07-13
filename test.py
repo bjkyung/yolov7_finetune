@@ -340,6 +340,7 @@ if __name__ == '__main__':
     elif opt.task == 'study':  # run over a range of settings and save/plot
         # python test.py --task study --data coco.yaml --iou 0.65 --weights yolov7.pt
         x = list(range(256, 1536 + 128, 128))  # x axis (image sizes)
+        os.makedirs('./study_results/', exist_ok=True) #저장할 디렉토리 만들기
         for w in opt.weights:
             f = f'study_{Path(opt.data).stem}_{Path(w).stem}.txt'  # filename to save to
             y = []  # y axis
@@ -348,6 +349,22 @@ if __name__ == '__main__':
                 r, _, t = test(opt.data, w, opt.batch_size, i, opt.conf_thres, opt.iou_thres, opt.save_json,
                                plots=False, v5_metric=opt.v5_metric)
                 y.append(r + t)  # results and times
+        # challenge 결과에 맞게 txt로 저장
+            for j, det in enumerate(r):  # detections per image
+                if len(det):
+                    # Rescale boxes from img size to im0 size
+                    det[:, :4] = scale_coords(imgs[j].shape[1:], det[:, :4], im0.shape).round()
+
+                    with open(f'./study_results/{image_id[j]}.txt', 'w') as f:
+                        for *xyxy, conf, cls in det:
+                            # Transform from (x1, y1, x2, y2) to (x, y, width, height)
+                            x1, y1, x2, y2 = xyxy
+                            x = x1
+                            y = y1
+                            width = x2 - x1
+                            height = y2 - y1
+                            f.write(f'{x},{y},{width},{height},{conf},{int(cls)},-1,-1\n')
+                        
             np.savetxt(f, y, fmt='%10.4g')  # save
         os.system('zip -r study.zip study_*.txt')
         plot_study_txt(x=x)  # plot

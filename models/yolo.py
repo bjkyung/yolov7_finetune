@@ -1,4 +1,4 @@
-import argparse
+.import argparse
 import logging
 import sys
 from copy import deepcopy
@@ -600,7 +600,7 @@ class Model(nn.Module):
 
     def forward_once(self, x, profile=False):
         y, dt = [], []  # outputs
-        for m in self.model:
+        for idx, m in enumerate(self.model):
             if m.f != -1:  # if not from previous layer
                 x = y[m.f] if isinstance(m.f, int) else [x if j == -1 else y[j] for j in m.f]  # from earlier layers
 
@@ -622,6 +622,9 @@ class Model(nn.Module):
                 dt.append((time_synchronized() - t) * 100)
                 print('%10.1f%10.0f%10.1fms %-40s' % (o, m.np, dt[-1], m.type))
 
+            if idx == 77:
+                import pdb
+                pdb.set_trace()
             x = m(x)  # run
             
             y.append(x if m.i in self.save else None)  # save output
